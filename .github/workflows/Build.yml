@@ -125,11 +125,11 @@ jobs:
             if [ -f fs/namespace.c ] && ! grep -q "linux/susfs_def.h" fs/namespace.c; then
               echo "检测到 namespace.c 补丁未完全应用，正在手动修复头部声明..."
               
-              # 清理可能残留的旧版变量定义
               sed -i '/extern bool susfs_is_sdcard_android_data_decrypted/d' ./fs/namespace.c
               sed -i '/extern bool susfs_is_current_ksu_domain/d' ./fs/namespace.c
               
-              cat <<EOF > /tmp/susfs_fix.txt
+              # 注意：这里的 EOF 和内部代码都必须缩进！
+              cat <<'EOF' > /tmp/susfs_fix.txt
 #ifdef CONFIG_KSU_SUSFS_SUS_MOUNT
 #include <linux/susfs_def.h>
 extern bool susfs_is_current_ksu_domain(void);
@@ -144,14 +144,12 @@ static DEFINE_IDA(susfs_mnt_id_ida);
 static DEFINE_IDA(susfs_mnt_group_ida);
 #endif
 EOF
-              # 在 internal.h 之后插入
               sed -i '/#include "internal.h"/r /tmp/susfs_fix.txt' ./fs/namespace.c
               rm -f /tmp/susfs_fix.txt
               echo "✅ namespace.c 头部声明修复完成"
             fi
           fi
 
-         
           if [[ "${{ inputs.ksu_type }}" == *susfs ]]; then
             echo "CONFIG_KSU_SUSFS=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_KSU_SUSFS_SUS_PATH=y" >> arch/arm64/configs/gki_defconfig
@@ -172,9 +170,6 @@ EOF
             echo "CONFIG_TCP_CONG_ADVANCED=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_TCP_CONG_BBR=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_NET_SCH_FQ=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_BIC=n" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_WESTWOOD=n" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_TCP_CONG_HTCP=n" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IP_ECN=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_TCP_ECN=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IPV6_ECN=y" >> arch/arm64/configs/gki_defconfig
@@ -187,22 +182,6 @@ EOF
             echo "CONFIG_NETFILTER_XT_SET=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IP_SET=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IP_SET_MAX=65534" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IP=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_IPMAC=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_BITMAP_PORT=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IP=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMARK=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORT=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTIP=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPPORTNET=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_IPMAC=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_MAC=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORTNET=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NET=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETNET=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETPORT=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_HASH_NETIFACE=y" >> arch/arm64/configs/gki_defconfig
-            echo "CONFIG_IP_SET_LIST_SET=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IP6_NF_NAT=y" >> arch/arm64/configs/gki_defconfig
             echo "CONFIG_IP6_NF_TARGET_MASQUERADE=y" >> arch/arm64/configs/gki_defconfig
           fi
@@ -219,11 +198,11 @@ EOF
               CUSTOM_NAME="-${CUSTOM_NAME}"
             fi
             echo "CONFIG_LOCALVERSION=\"${CUSTOM_NAME}\"" >> arch/arm64/configs/gki_defconfig
-            echo "Kernel name set to: ${CUSTOM_NAME}"
           fi
 
           make O=out gki_defconfig vendor/pineapple_GKI.config vendor/oplus/pineapple_GKI.config
           make -j2 O=out Image
+
 
       - name: Make AnyKernel3
         run: |
