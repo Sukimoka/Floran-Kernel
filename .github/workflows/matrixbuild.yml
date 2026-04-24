@@ -200,7 +200,7 @@ jobs:
         run: |
           TIME_FORM="$(date -u +'%Y-%m-%d %H:%M:%S') UTC"
           echo "TIME_FORM=$TIME_FORM" >> $GITHUB_ENV
-          VERSION=$((${{ github.run_number }} - 3))
+          VERSION=$((${{ github.run_number }} - 4))
           REL_TAG="FloranKernel-R${VERSION}"
           echo "REL_TAG=$REL_TAG" >> $GITHUB_ENV
           echo "REL_TITLE=Floran Kernel Build Release！" >> $GITHUB_ENV
